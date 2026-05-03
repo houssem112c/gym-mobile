@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../config/colors.dart';
 import '../widgets/gradient_background.dart';
 import '../models/course.dart';
@@ -69,17 +70,28 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Our Courses',
-                        style: TextStyle(
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                            onPressed: () => Navigator.pop(context),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            'courses_title'.tr(),
+                            style: TextStyle(
+                              fontSize: titleFontSize,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Choose from our variety of fitness programs',
+                        'courses_subtitle'.tr(),
                         style: TextStyle(
                           fontSize: subtitleFontSize,
                           color: AppColors.gray400,
@@ -118,7 +130,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     const SizedBox(height: 16),
                                     ElevatedButton(
                                       onPressed: _loadCourses,
-                                      child: const Text('Retry'),
+                                      child: Text('common_retry'.tr()),
                                     ),
                                   ],
                                 ),
@@ -130,7 +142,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 height: 200,
                                 child: Center(
                                   child: Text(
-                                    'No courses available',
+                                    'no_courses'.tr(),
                                     style: TextStyle(color: AppColors.gray400),
                                   ),
                                 ),

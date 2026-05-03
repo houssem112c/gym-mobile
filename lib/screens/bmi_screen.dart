@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../models/bmi.dart';
 import '../services/bmi_service.dart';
 import '../services/auth_service.dart';
@@ -69,7 +70,7 @@ class _BmiScreenState extends State<BmiScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BMI Calculator'),
+        title: Text('bmi_title'.tr()),
         actions: [
           IconButton(
             icon: const Icon(Icons.history_rounded),
@@ -92,46 +93,46 @@ class _BmiScreenState extends State<BmiScreen> {
           child: ListView(
             children: [
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Age'),
+                decoration: InputDecoration(labelText: 'bmi_age'.tr()),
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   final val = int.tryParse(v ?? '');
                   if (val == null || val < 2 || val > 120) {
-                    return 'Enter a valid age (2-120)';
+                    return 'bmi_error_age'.tr();
                   }
                   return null;
                 },
                 onSaved: (v) => _age = int.parse(v!),
               ),
               DropdownButtonFormField<Gender>(
-                decoration: const InputDecoration(labelText: 'Gender'),
-                items: const [
-                  DropdownMenuItem(value: Gender.male, child: Text('Male')),
-                  DropdownMenuItem(value: Gender.female, child: Text('Female')),
+                decoration: InputDecoration(labelText: 'bmi_gender'.tr()),
+                items: [
+                  DropdownMenuItem(value: Gender.male, child: Text('bmi_male'.tr())),
+                  DropdownMenuItem(value: Gender.female, child: Text('bmi_female'.tr())),
                 ],
-                validator: (v) => v == null ? 'Select gender' : null,
+                validator: (v) => v == null ? 'bmi_error_gender'.tr() : null,
                 onChanged: (v) => setState(() => _gender = v),
                 onSaved: (v) => _gender = v,
               ),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Height (meters)'),
+                decoration: InputDecoration(labelText: 'bmi_height'.tr()),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (v) {
                   final val = double.tryParse(v ?? '');
                   if (val == null || val < 0.5 || val > 2.5) {
-                    return 'Enter height in meters (0.5 - 2.5)';
+                    return 'bmi_error_height'.tr();
                   }
                   return null;
                 },
                 onSaved: (v) => _height = double.parse(v!),
               ),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Weight (kg)'),
+                decoration: InputDecoration(labelText: 'bmi_weight'.tr()),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (v) {
                   final val = double.tryParse(v ?? '');
                   if (val == null || val < 10 || val > 300) {
-                    return 'Enter weight in kg (10 - 300)';
+                    return 'bmi_error_weight'.tr();
                   }
                   return null;
                 },
@@ -140,7 +141,7 @@ class _BmiScreenState extends State<BmiScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _loading ? null : _calculateAndSave,
-                child: _loading ? const CircularProgressIndicator() : const Text('Calculate & Save'),
+                child: _loading ? const CircularProgressIndicator() : Text('bmi_calculate'.tr()),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 16),

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../config/colors.dart';
 import '../widgets/gradient_background.dart';
 import '../services/api_service.dart';
+import '../services/course_service.dart';
+import '../services/local_notification_service.dart';
 import '../config/api_config.dart';
+import 'booking/book_private_session_screen.dart';
+import 'booking/my_private_sessions_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -14,6 +19,7 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   final ApiService _apiService = ApiService();
+  final CourseService _courseService = CourseService();
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<DateTime, List<dynamic>> _sessions = {};
@@ -70,38 +76,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
               }
               
               final formattedSession = {
+                'id': session['id'],
                 'date': normalizedDate.toIso8601String(),
                 'courseName': session['course']?['title'] ?? session['title'] ?? 'Unknown Course',
                 'startTime': session['startTime'] ?? '',
                 'endTime': session['endTime'] ?? '',
                 'instructor': session['course']?['instructor'] ?? session['coachName'] ?? 'TBA',
-                'isRecurring': true,
+                'isRecurring': session['isRecurring'] ?? false,
                 'capacity': session['course']?['capacity'],
-              };
-              
-              sessions[normalizedDate]!.add(formattedSession);
-            }
-          } else if (!isRecurring && session['specificDate'] != null) {
-            // For specific date sessions: show only on that date
-            final sessionDate = DateTime.parse(session['specificDate'] as String);
-            final normalizedDate = DateTime(sessionDate.year, sessionDate.month, sessionDate.day);
-            
-            // Only show if within our date range
-            if (sessionDate.isAfter(startDate.subtract(const Duration(days: 1))) && 
-                sessionDate.isBefore(endDate.add(const Duration(days: 1)))) {
-              
-              if (sessions[normalizedDate] == null) {
-                sessions[normalizedDate] = [];
-              }
-              
-              final formattedSession = {
-                'date': normalizedDate.toIso8601String(),
-                'courseName': session['course']?['title'] ?? session['title'] ?? 'Unknown Course',
-                'startTime': session['startTime'] ?? '',
-                'endTime': session['endTime'] ?? '',
-                'instructor': session['course']?['instructor'] ?? session['coachName'] ?? 'TBA',
-                'isRecurring': false,
-                'capacity': session['course']?['capacity'],
+                'isBooked': session['isBooked'] ?? false,
               };
               
               sessions[normalizedDate]!.add(formattedSession);
@@ -118,6 +101,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _sessions = sessions;
         _isLoading = false;
       });
+
+      // Schedule session notifications for today's booked sessions
+      final flattenedSessions = sessions.values.expand((x) => x).toList();
+      LocalNotificationService.scheduleSessionNotifications(flattenedSessions);
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -186,23 +173,51 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   // Header
                   Padding(
                     padding: EdgeInsets.all(horizontalPadding),
-                    child: Column(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Class Schedule',
-                          style: TextStyle(
-                            fontSize: titleFontSize,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'calendar_title'.tr(),
+                                style: TextStyle(
+                                  fontSize: titleFontSize,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'calendar_subtitle'.tr(),
+                                style: TextStyle(
+                                  fontSize: subtitleFontSize,
+                                  color: AppColors.gray400,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'View and book your fitness classes',
-                          style: TextStyle(
-                            fontSize: subtitleFontSize,
-                            color: AppColors.gray400,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.primary500.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primary500.withOpacity(0.3)),
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const MyPrivateSessionsScreen(),
+                                ),
+                              ).then((_) => _loadSessions());
+                            },
+                            icon: const Icon(Icons.person),
+                            color: AppColors.primary500,
+                            tooltip: 'Private Sessions',
                           ),
                         ),
                       ],
@@ -227,7 +242,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     ),
                 child: TableCalendar(
                   firstDay: DateTime.utc(2024, 1, 1),
-                  lastDay: DateTime.utc(2025, 12, 31),
+                  lastDay: DateTime.utc(2030, 12, 31),
                   focusedDay: _focusedDay,
                   selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                   eventLoader: _getSessionsForDay,
@@ -262,6 +277,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       shape: BoxShape.circle,
                     ),
                   ),
+                  calendarBuilders: CalendarBuilders(
+                    markerBuilder: (context, date, events) {
+                      if (events.isEmpty) return const SizedBox();
+                      
+                      final hasBooked = events.any((e) => (e as Map)['isBooked'] == true);
+                      
+                      return Positioned(
+                        right: 1,
+                        bottom: 1,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: hasBooked ? AppColors.accent500 : AppColors.primary400,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   headerStyle: HeaderStyle(
                     titleCentered: true,
                     formatButtonVisible: false,
@@ -288,6 +323,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       _selectedDay = selectedDay;
                       _focusedDay = focusedDay;
                     });
+                    _showDateActions(selectedDay);
                   },
                   onPageChanged: (focusedDay) {
                     _focusedDay = focusedDay;
@@ -331,7 +367,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No classes scheduled for this day',
+              'calendar_no_classes'.tr(),
               style: TextStyle(
                 fontSize: 16,
                 color: AppColors.gray400,
@@ -397,7 +433,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   width: 4,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: AppColors.primary400,
+                    color: session['isBooked'] == true ? AppColors.accent500 : AppColors.primary400,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -443,7 +479,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Recurring',
+                                    'course_recurring'.tr(),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: AppColors.blue400,
@@ -527,7 +563,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: AppColors.primary400,
+                  color: session['isBooked'] == true ? AppColors.accent500 : AppColors.primary400,
                   size: 16,
                 ),
               ],
@@ -548,7 +584,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           side: BorderSide(color: AppColors.gray700),
         ),
         title: Text(
-          session['courseName'] ?? 'Session Details',
+          session['courseName'] ?? 'calendar_session_details'.tr(),
           style: const TextStyle(color: Colors.white),
         ),
         content: Column(
@@ -557,14 +593,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
           children: [
             _buildDetailRow(
               Icons.access_time,
-              'Time',
+              'calendar_time'.tr(),
               '${session['startTime']} - ${session['endTime']}',
             ),
             if (session['instructor'] != null) ...[
               const SizedBox(height: 12),
               _buildDetailRow(
                 Icons.person,
-                'Instructor',
+                'course_instructor'.tr(),
                 session['instructor'],
               ),
             ],
@@ -572,7 +608,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               const SizedBox(height: 12),
               _buildDetailRow(
                 Icons.people,
-                'Capacity',
+                'course_capacity'.tr(),
                 '${session['capacity']} spots',
               ),
             ],
@@ -582,21 +618,37 @@ class _CalendarScreenState extends State<CalendarScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Close',
+              'common_close'.tr(),
               style: TextStyle(color: AppColors.gray400),
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Booking feature coming soon!')),
-              );
-            },
+            onPressed: session['isBooked'] == true
+                ? null
+                : () async {
+                    Navigator.pop(context);
+                    final success = await _courseService.bookSession(session['id']);
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Successfully booked!').tr(),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      _loadSessions(); // Reload to update UI
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Booking failed.').tr(),
+                          backgroundColor: AppColors.accent500,
+                        ),
+                      );
+                    }
+                  },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary500,
+              backgroundColor: session['isBooked'] == true ? AppColors.gray600 : AppColors.primary500,
             ),
-            child: const Text('Book Now'),
+            child: Text(session['isBooked'] == true ? 'Booked' : 'calendar_book_now'.tr()),
           ),
         ],
       ),
@@ -631,6 +683,54 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showDateActions(DateTime date) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.gray900,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              DateFormat('d MMMM y').format(date),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookPrivateSessionScreen(initialDate: date),
+                  ),
+                ).then((_) => _loadSessions()); // Refresh after booking
+              },
+              icon: const Icon(Icons.person_add),
+              label: const Text('Book Private Session'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary500,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
     );
   }
 }

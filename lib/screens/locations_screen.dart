@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../config/colors.dart';
 import '../widgets/gradient_background.dart';
 import '../models/location.dart';
@@ -84,7 +85,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                           const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: _loadLocations,
-                            child: const Text('Retry'),
+                            child: Text('common_retry'.tr()),
                           ),
                         ],
                       ),
@@ -95,7 +96,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                   ? GradientBackground(
                       child: Center(
                         child: Text(
-                          'No locations available',
+                          'locations_no_locations'.tr(),
                           style: TextStyle(color: AppColors.gray400),
                         ),
                       ),
@@ -166,12 +167,12 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                   ],
                                 ),
                               ),
-                              child: const Column(
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Our Locations',
-                                    style: TextStyle(
+                                    'locations_title'.tr(),
+                                    style: const TextStyle(
                                       fontSize: 32,
                                       fontWeight: FontWeight.w800,
                                       color: Colors.white,
@@ -308,7 +309,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                   icon: const Icon(Icons.directions, size: 18),
-                  label: const Text('Get Directions', style: TextStyle(fontSize: 14)),
+                  label: Text('locations_get_directions'.tr(), style: const TextStyle(fontSize: 14)),
                 ),
               ),
             ],
@@ -350,7 +351,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open maps')),
+          SnackBar(content: Text('locations_could_not_open_maps'.tr())),
         );
       }
     }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
+import '../models/user.dart';
 import '../config/api_config.dart';
 
 class AuthService extends ChangeNotifier {
@@ -16,8 +17,10 @@ class AuthService extends ChangeNotifier {
   String? _refreshToken;
 
   bool get isAuthenticated => _isAuthenticated;
-  Map<String, dynamic>? get user => _user;
   String? get accessToken => _accessToken;
+  String? get token => _accessToken;
+  Map<String, dynamic>? get user => _user;
+  User? get currentUser => _user != null ? User.fromJson(_user!) : null;
 
   AuthService() {
     _setupInterceptors();
@@ -56,6 +59,11 @@ class AuthService extends ChangeNotifier {
         },
       ),
     );
+  }
+
+  void updateUser(User user) {
+    _user = user.toJson();
+    notifyListeners();
   }
 
   Future<void> _loadFromStorage() async {
@@ -166,7 +174,13 @@ class AuthService extends ChangeNotifier {
   Future<void> logout() async {
     try {
       if (_accessToken != null) {
-        await _dio.post('${ApiConfig.baseUrl}/auth/logout');
+        await _dio.post(
+          '${ApiConfig.baseUrl}/auth/logout',
+          options: Options(
+            receiveTimeout: const Duration(seconds: 2),
+            sendTimeout: const Duration(seconds: 2),
+          ),
+        );
       }
     } catch (e) {
       print('Error during logout: $e');
@@ -222,5 +236,12 @@ class AuthService extends ChangeNotifier {
     } else {
       return 'An unexpected error occurred.';
     }
+  }
+
+  // Update user information locally
+  Future<void> updateUserInfo(Map<String, dynamic> updatedUser) async {
+    _user = updatedUser;
+    await _saveToStorage();
+    notifyListeners();
   }
 }

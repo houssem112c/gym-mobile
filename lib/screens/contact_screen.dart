@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../config/colors.dart';
 import '../widgets/gradient_background.dart';
 import '../services/auth_service.dart';
@@ -98,8 +99,8 @@ class _ContactScreenState extends State<ContactScreen> {
             backgroundColor: AppColors.gray900,
             elevation: 0,
             title: Text(
-              'Contact Admin',
-              style: TextStyle(
+              'contact_title'.tr(),
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -119,7 +120,7 @@ class _ContactScreenState extends State<ContactScreen> {
                       ),
                     );
                   },
-                  tooltip: 'Message History',
+                  tooltip: 'contact_history'.tr(),
                 ),
             ],
           ),
@@ -159,14 +160,14 @@ class _ContactScreenState extends State<ContactScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Logged in as ${authService.user?['email']}',
-                                    style: TextStyle(
+                                    '${'contact_logged_in_as'.tr()} ${authService.user?['email']}',
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   Text(
-                                    'Your messages will be saved and you\'ll receive responses',
+                                    'contact_messages_saved'.tr(),
                                     style: TextStyle(
                                       color: AppColors.gray300,
                                       fontSize: 12,
@@ -184,14 +185,14 @@ class _ContactScreenState extends State<ContactScreen> {
                     // Contact info cards
                     _buildContactInfoCard(
                       Icons.email,
-                      'Email',
-                      'admin@gym.com',
+                      'contact_email'.tr(),
+                      'contact_email_value'.tr(),
                     ),
                     const SizedBox(height: 16),
                     _buildContactInfoCard(
                       Icons.access_time,
-                      'Response Time',
-                      'Usually within 24 hours',
+                      'contact_response_time'.tr(),
+                      'contact_response_value'.tr(),
                     ),
                     
                     const SizedBox(height: 32),
@@ -218,8 +219,8 @@ class _ContactScreenState extends State<ContactScreen> {
                           children: [
                             Text(
                               authService.isAuthenticated 
-                                  ? 'Send Message to Admin'
-                                  : 'Login Required',
+                                  ? 'contact_send_message'.tr()
+                                  : 'contact_login_required'.tr(),
                               style: TextStyle(
                                 fontSize: isTablet ? 24 : 20,
                                 fontWeight: FontWeight.bold,
@@ -229,7 +230,7 @@ class _ContactScreenState extends State<ContactScreen> {
                             const SizedBox(height: 8),
                             if (!authService.isAuthenticated)
                               Text(
-                                'Please log in to send messages and receive responses.',
+                                'contact_login_prompt'.tr(),
                                 style: TextStyle(
                                   color: AppColors.gray400,
                                   fontSize: isTablet ? 16 : 14,
@@ -243,7 +244,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                 controller: _subjectController,
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
-                                  labelText: 'Subject',
+                                  labelText: 'contact_subject'.tr(),
                                   labelStyle: TextStyle(color: AppColors.gray400),
                                   prefixIcon: Icon(Icons.subject, color: AppColors.primary400),
                                   filled: true,
@@ -263,7 +264,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                 ),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter a subject';
+                                    return 'error_subject_required'.tr();
                                   }
                                   return null;
                                 },
@@ -276,7 +277,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                 style: const TextStyle(color: Colors.white),
                                 dropdownColor: AppColors.gray800,
                                 decoration: InputDecoration(
-                                  labelText: 'Priority',
+                                  labelText: 'contact_priority'.tr(),
                                   labelStyle: TextStyle(color: AppColors.gray400),
                                   prefixIcon: Icon(Icons.flag, color: AppColors.primary400),
                                   filled: true,
@@ -297,19 +298,19 @@ class _ContactScreenState extends State<ContactScreen> {
                                 items: [
                                   DropdownMenuItem(
                                     value: 'LOW',
-                                    child: Text('Low Priority'),
+                                    child: Text('priority_low'.tr()),
                                   ),
                                   DropdownMenuItem(
                                     value: 'NORMAL',
-                                    child: Text('Normal Priority'),
+                                    child: Text('priority_normal'.tr()),
                                   ),
                                   DropdownMenuItem(
                                     value: 'HIGH',
-                                    child: Text('High Priority'),
+                                    child: Text('priority_high'.tr()),
                                   ),
                                   DropdownMenuItem(
                                     value: 'URGENT',
-                                    child: Text('Urgent'),
+                                    child: Text('priority_urgent'.tr()),
                                   ),
                                 ],
                                 onChanged: (value) {
@@ -326,7 +327,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                 maxLines: 6,
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
-                                  labelText: 'Message',
+                                  labelText: 'contact_message'.tr(),
                                   labelStyle: TextStyle(color: AppColors.gray400),
                                   alignLabelWithHint: true,
                                   prefixIcon: Padding(
@@ -350,10 +351,10 @@ class _ContactScreenState extends State<ContactScreen> {
                                 ),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter your message';
+                                    return 'error_message_required'.tr();
                                   }
                                   if (value.trim().length < 10) {
-                                    return 'Message must be at least 10 characters';
+                                    return 'error_message_short'.tr();
                                   }
                                   return null;
                                 },
@@ -383,7 +384,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                           ),
                                         )
                                       : Text(
-                                          'Send Message',
+                                          'contact_send_button'.tr(),
                                           style: TextStyle(
                                             fontSize: isTablet ? 18 : 16,
                                             fontWeight: FontWeight.bold,
@@ -409,8 +410,8 @@ class _ContactScreenState extends State<ContactScreen> {
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      'Authentication Required',
-                                      style: TextStyle(
+                                      'contact_auth_required_title'.tr(),
+                                      style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
@@ -418,7 +419,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Please log in to send messages to the admin. This allows us to respond to you directly and keep track of your conversation history.',
+                                      'contact_auth_required_desc'.tr(),
                                       style: TextStyle(
                                         color: AppColors.gray300,
                                       ),
@@ -444,7 +445,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                         ),
                                         icon: const Icon(Icons.login),
                                         label: Text(
-                                          'Login to Continue',
+                                          'contact_login_button'.tr(),
                                           style: TextStyle(
                                             fontSize: isTablet ? 18 : 16,
                                             fontWeight: FontWeight.bold,

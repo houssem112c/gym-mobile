@@ -5,6 +5,9 @@ class Course {
   final int duration;
   final int capacity;
   final String instructor;
+  final String? videoUrl;
+  final String? thumbnail;
+  final String? categoryId;
   final List<CourseSchedule>? schedules;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -16,6 +19,9 @@ class Course {
     required this.duration,
     required this.capacity,
     required this.instructor,
+    this.videoUrl,
+    this.thumbnail,
+    this.categoryId,
     this.schedules,
     required this.createdAt,
     required this.updatedAt,
@@ -29,6 +35,9 @@ class Course {
       duration: json['duration'],
       capacity: json['capacity'],
       instructor: json['instructor'],
+      videoUrl: json['videoUrl'],
+      thumbnail: json['thumbnail'],
+      categoryId: json['categoryId'],
       schedules: json['schedules'] != null
           ? (json['schedules'] as List)
               .map((s) => CourseSchedule.fromJson(s))
@@ -53,6 +62,7 @@ class CourseSchedule {
   final String? endDate;
   final bool isRecurring;
   final bool isActive;
+  final bool isBooked;
   final Course? course;
 
   CourseSchedule({
@@ -68,6 +78,7 @@ class CourseSchedule {
     this.endDate,
     required this.isRecurring,
     required this.isActive,
+    this.isBooked = false,
     this.course,
   });
 
@@ -85,6 +96,7 @@ class CourseSchedule {
       endDate: json['endDate'],
       isRecurring: json['isRecurring'],
       isActive: json['isActive'],
+      isBooked: json['isBooked'] ?? false,
       course: json['course'] != null ? Course.fromJson(json['course']) : null,
     );
   }

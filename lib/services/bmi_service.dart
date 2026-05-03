@@ -28,18 +28,7 @@ class BmiService {
           handler.next(options);
         },
         onError: (error, handler) async {
-          // Handle 401 errors by refreshing token
-          if (error.response?.statusCode == 401) {
-            try {
-              // The auth service handles token refresh automatically
-              // Just retry the request
-              final response = await _dio.fetch(error.requestOptions);
-              handler.resolve(response);
-              return;
-            } catch (e) {
-              // If refresh fails, let the error propagate
-            }
-          }
+          // Let the error propagate - auth service handles token refresh
           handler.next(error);
         },
       ),

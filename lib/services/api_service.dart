@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 
 class ApiService {
@@ -16,7 +17,20 @@ class ApiService {
       ),
     );
 
-    // Add interceptors for logging
+    // Add interceptors
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final prefs = await SharedPreferences.getInstance();
+          final token = prefs.getString('access_token');
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+
     _dio.interceptors.add(
       LogInterceptor(
         request: true,
@@ -33,9 +47,18 @@ class ApiService {
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
   }) async {
     try {
-      return await _dio.get(path, queryParameters: queryParameters);
+      final options = Options();
+      if (headers != null) {
+        options.headers = headers;
+      }
+      return await _dio.get(
+        path, 
+        queryParameters: queryParameters,
+        options: options,
+      );
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -57,6 +80,51 @@ class ApiService {
       return await _dio.post(
         path,
         data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // PATCH request
+  Future<Response> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final options = Options();
+      if (headers != null) {
+        options.headers = headers;
+      }
+      
+      return await _dio.patch(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // DELETE request
+  Future<Response> delete(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final options = Options();
+      if (headers != null) {
+        options.headers = headers;
+      }
+      return await _dio.delete(
+        path,
         queryParameters: queryParameters,
         options: options,
       );

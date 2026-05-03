@@ -22,6 +22,8 @@ dependencies:
   
   # HTTP & API
   dio: ^5.4.0
+  flutter_stripe: ^12.0.0
+  flutter_stripe_web: ^7.0.0
   http: ^1.1.2
   
   # Date & Time
@@ -42,10 +44,33 @@ dependencies:
   
   # URL Launcher
   url_launcher: ^6.2.2
+
+  # WebView (avatar creator)
+  webview_flutter: ^4.10.0
+  flutter_inappwebview: ^6.1.5
   
   # Forms
   flutter_form_builder: ^10.2.0
   form_builder_validators: ^11.0.0
+  
+  # Image & File Handling
+  image_picker: ^1.0.4
+  image_cropper: ^8.0.2
+  
+  # Supabase for image upload
+  supabase_flutter: ^2.5.6
+  
+  # Date picker
+  intl: ^0.20.2
+  fl_chart: ^1.1.1
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+  flutter_timezone: ^5.0.1
+  easy_localization: ^3.0.8
+  model_viewer_plus: ^1.9.3
+
+  # For loading bundled .glb assets into a local file path
+  path_provider: ^2.1.5
 
 
 dev_dependencies:
@@ -57,6 +82,7 @@ flutter:
   uses-material-design: true
   
   # Add assets
-  # assets:
-  #   - assets/images/
-  #   - assets/icons/
+  assets:
+    - assets/images/
+    - assets/translations/
+    - assets/avatars/
