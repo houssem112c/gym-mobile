@@ -73,12 +73,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           // 3. Display Payment Sheet
           await Stripe.instance.presentPaymentSheet();
         }
-      } else {
-        // XP Payment Flow
+      } else if (_paymentMethod == 'POINTS') {
         final currentPoints = gamificationProvider.userGamification?.totalPoints ?? 0;
         if (currentPoints < cart.totalPoints) {
           throw Exception('insufficient_points'.tr());
         }
+      } else if (_paymentMethod == 'CASH') {
+        // Cash payment - just proceed to order creation
       }
 
       // 4. On Success
@@ -179,6 +180,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               icon: Icons.stars,
               value: 'POINTS',
             ),
+            const SizedBox(height: 12),
+            _buildPaymentMethodTile(
+              title: 'pay_with_cash'.tr(),
+              subtitle: 'Cash on delivery / Pay in person',
+              icon: Icons.payments,
+              value: 'CASH',
+            ),
             const SizedBox(height: 32),
             _isLoading
                 ? const CircularProgressIndicator()
@@ -195,7 +203,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       child: Text(
                         _paymentMethod == 'MONEY'
                             ? (kIsWeb ? 'pay_now'.tr() : 'checkout'.tr())
-                            : 'pay_with_points'.tr(),
+                            : _paymentMethod == 'POINTS'
+                                ? 'pay_with_points'.tr()
+                                : 'confirm_order'.tr(),
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),

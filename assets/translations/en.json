@@ -207,6 +207,8 @@
     "select_payment_method": "Select Payment Method",
     "pay_with_money": "Pay with Money",
     "pay_with_points": "Pay with Points",
+    "pay_with_cash": "Pay in Person",
+    "confirm_order": "Confirm Order",
     "insufficient_points": "Insufficient points balance",
     "community_original_post": "original post",
     "community_likes": "likes",
