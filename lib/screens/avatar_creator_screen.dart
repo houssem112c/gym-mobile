@@ -161,58 +161,84 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
     final bool isFaceMode = (_selectedTab >= 1 && _selectedTab <= 5);
 
     return Container(
-      height: 340,
+      height: 280,
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.surface900,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.surface700, width: 1.5),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
-        child: Stack(
-          alignment: Alignment.topCenter,
-          children: [
-            // Body (local asset)
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeInOut,
-              transform: Matrix4.identity()
-                ..scale(isFaceMode ? 3.0 : 1.0),
-              transformAlignment: Alignment.topCenter,
-              child: Image.asset(
-                _getBodyImage(),
-                key: ValueKey('body_${_getBodyImage()}'),
-                fit: BoxFit.contain,
-              ),
-            ),
-
-            // Face overlay (DiceBear SVG - sharp, high quality)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: AnimatedContainer(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Focused Face Preview
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
                 duration: const Duration(milliseconds: 400),
-                curve: Curves.easeInOut,
-                transform: Matrix4.identity()
-                  ..scale(isFaceMode ? 3.0 : 1.0),
-                transformAlignment: Alignment.topCenter,
-                child: SizedBox(
-                  height: 80,
-                  child: SvgPicture.network(
-                    _getAvatarUrl(),
-                    key: ValueKey('face_svg_${_getAvatarUrl()}'),
-                    fit: BoxFit.contain,
-                    placeholderBuilder: (context) => const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary500),
+                height: isFaceMode ? 160 : 110,
+                width: isFaceMode ? 160 : 110,
+                decoration: BoxDecoration(
+                  color: AppColors.surface800,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isFaceMode ? AppColors.primary500 : AppColors.surface700,
+                    width: isFaceMode ? 3 : 1.5,
+                  ),
+                  boxShadow: isFaceMode
+                      ? [BoxShadow(color: AppColors.primary500.withOpacity(0.3), blurRadius: 15, spreadRadius: 2)]
+                      : [],
+                ),
+                child: ClipOval(
+                  child: Transform.scale(
+                    scale: 1.2,
+                    child: SvgPicture.network(
+                      _getAvatarUrl(),
+                      key: ValueKey('face_svg_${_getAvatarUrl()}'),
+                      fit: BoxFit.contain,
+                      placeholderBuilder: (context) => const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary500),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 8),
+              Text(
+                'Face',
+                style: TextStyle(
+                  color: isFaceMode ? AppColors.primary500 : Colors.white54,
+                  fontSize: 12,
+                  fontWeight: isFaceMode ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(width: 40),
+
+          // Body/Outfit Preview
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                height: isFaceMode ? 140 : 190,
+                child: Image.asset(
+                  _getBodyImage(),
+                  key: ValueKey('body_${_getBodyImage()}'),
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Body',
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -438,7 +464,7 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface950,
         elevation: 0,
-        title: const Text('Customize Avatar', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Customize Avatar', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
@@ -459,10 +485,12 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildPreview(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               _buildCategorySelector(),
-              const SizedBox(height: 16),
-              Expanded(child: _buildActiveTab()),
+              const SizedBox(height: 20),
+              Expanded(
+                child: _buildActiveTab(),
+              ),
             ],
           ),
         ),

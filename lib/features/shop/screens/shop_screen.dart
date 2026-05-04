@@ -135,7 +135,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
             final products = snapshot.data!;
             return GridView.builder(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 100),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 0.65,
