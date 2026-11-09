@@ -5,6 +5,7 @@ import '../widgets/gradient_background.dart';
 import '../models/course.dart';
 import '../services/api_service.dart';
 import '../config/api_config.dart';
+import 'course_videos_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -202,6 +203,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (course.thumbnail != null && course.thumbnail!.isNotEmpty) ...[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.network(
+                                course.thumbnail!,
+                                width: double.infinity,
+                                height: 190,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
                           Text(
                             course.title,
                             style: const TextStyle(
@@ -398,6 +412,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       course.instructor,
                       Icons.person,
                     ),
+                    if (course.videoUrl != null && course.videoUrl!.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.play_circle_outline),
+                          label: const Text('Watch course video'),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CourseVideosScreen(course: course),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                     if (course.schedules?.isNotEmpty == true) ...[
                       const SizedBox(height: 32),
                       const Text(

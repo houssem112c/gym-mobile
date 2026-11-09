@@ -15,6 +15,7 @@ class AuthService extends ChangeNotifier {
   Map<String, dynamic>? _user;
   String? _accessToken;
   String? _refreshToken;
+  late final Future<void> initialization;
 
   bool get isAuthenticated => _isAuthenticated;
   String? get accessToken => _accessToken;
@@ -24,7 +25,7 @@ class AuthService extends ChangeNotifier {
 
   AuthService() {
     _setupInterceptors();
-    _loadFromStorage();
+    initialization = _loadFromStorage();
   }
 
   void _setupInterceptors() {
@@ -42,11 +43,11 @@ class AuthService extends ChangeNotifier {
             // Try to refresh token
             try {
               await _refreshAccessToken();
-              
+
               // Retry the original request
               final opts = error.requestOptions;
               opts.headers['Authorization'] = 'Bearer $_accessToken';
-              
+
               final response = await _dio.fetch(opts);
               handler.resolve(response);
               return;
@@ -69,16 +70,17 @@ class AuthService extends ChangeNotifier {
   Future<void> _loadFromStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       _accessToken = prefs.getString(_accessTokenKey);
       _refreshToken = prefs.getString(_refreshTokenKey);
-      
+
       final userJson = prefs.getString(_userKey);
       if (userJson != null) {
         _user = json.decode(userJson);
       }
 
-      _isAuthenticated = _accessToken != null && _user != null;
+      _isAuthenticated =
+          _accessToken != null && _refreshToken != null && _user != null;
       notifyListeners();
     } catch (e) {
       print('Error loading auth data from storage: $e');
@@ -88,7 +90,7 @@ class AuthService extends ChangeNotifier {
   Future<void> _saveToStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       if (_accessToken != null) {
         await prefs.setString(_accessTokenKey, _accessToken!);
       } else {
@@ -127,9 +129,9 @@ class AuthService extends ChangeNotifier {
       );
 
       final data = response.data;
-      
-      _accessToken = data['accessToken'];
-      _refreshToken = data['refreshToken'];
+
+      _accessToken = data['accessToken'] ?? data['access_token'];
+      _refreshToken = data['refreshToken'] ?? data['refresh_token'];
       _user = data['user'];
       _isAuthenticated = true;
 
@@ -156,9 +158,9 @@ class AuthService extends ChangeNotifier {
       );
 
       final data = response.data;
-      
-      _accessToken = data['accessToken'];
-      _refreshToken = data['refreshToken'];
+
+      _accessToken = data['accessToken'] ?? data['access_token'];
+      _refreshToken = data['refreshToken'] ?? data['refresh_token'];
       _user = data['user'];
       _isAuthenticated = true;
 
@@ -195,13 +197,24 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  Future<void> clearLocalSession() async {
+    _accessToken = null;
+    _refreshToken = null;
+    _user = null;
+    _isAuthenticated = false;
+    await _saveToStorage();
+    notifyListeners();
+  }
+
   Future<void> _refreshAccessToken() async {
     if (_refreshToken == null) {
       throw Exception('No refresh token available');
     }
 
     try {
-      final response = await _dio.post(
+      // Do not use the interceptor-enabled client here: a 401 from refresh
+      // must not trigger another refresh attempt.
+      final response = await Dio().post(
         '${ApiConfig.baseUrl}/auth/refresh',
         data: {
           'refreshToken': _refreshToken,
@@ -209,16 +222,32 @@ class AuthService extends ChangeNotifier {
       );
 
       final data = response.data;
-      
-      _accessToken = data['accessToken'];
-      _refreshToken = data['refreshToken'];
+
+      final accessToken = data['accessToken'] ?? data['access_token'];
+      final refreshToken = data['refreshToken'] ?? data['refresh_token'];
+      if (accessToken is! String ||
+          accessToken.isEmpty ||
+          refreshToken is! String ||
+          refreshToken.isEmpty) {
+        throw StateError('Refresh response did not contain valid tokens');
+      }
+
+      _accessToken = accessToken;
+      _refreshToken = refreshToken;
       _user = data['user'];
+      _isAuthenticated = _user != null;
 
       await _saveToStorage();
       notifyListeners();
     } on DioException catch (e) {
       throw _handleError(e);
     }
+  }
+
+  Future<void> refreshSession() => _refreshAccessToken();
+
+  Future<Response<dynamic>> authenticatedGet(String path) {
+    return _dio.get('${ApiConfig.baseUrl}$path');
   }
 
   String _handleError(DioException error) {
@@ -229,7 +258,7 @@ class AuthService extends ChangeNotifier {
       }
       return 'Server error: ${error.response!.statusCode}';
     } else if (error.type == DioExceptionType.connectionTimeout ||
-               error.type == DioExceptionType.receiveTimeout) {
+        error.type == DioExceptionType.receiveTimeout) {
       return 'Connection timeout. Please check your internet connection.';
     } else if (error.type == DioExceptionType.connectionError) {
       return 'Unable to connect to server. Please check your internet connection.';

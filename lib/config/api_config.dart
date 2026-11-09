@@ -1,7 +1,7 @@
 class ApiConfig {
   // Replace with your computer's IP address when testing on physical device
   // For emulator: use 10.0.2.2 (Android) or localhost (iOS)
-  static const String baseUrl = 'https://gym-api-gymapp4730.azurewebsites.net/api';
+  static const String baseUrl = 'https://gym-backend-1-qchc.onrender.com/api';
   
   // Endpoints
   static const String courses = '/courses';

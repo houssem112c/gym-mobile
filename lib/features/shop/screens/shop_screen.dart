@@ -8,6 +8,7 @@ import '../../../providers/gamification_provider.dart';
 import '../services/shop_service.dart';
 import 'cart_screen.dart';
 import 'favorites_screen.dart';
+import 'order_tracking_screen.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
@@ -39,6 +40,14 @@ class _ShopScreenState extends State<ShopScreen> {
       appBar: AppBar(
         title: Text('shop_title'.tr()),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.local_shipping_outlined),
+            tooltip: 'Track deliveries',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const OrderTrackingScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.favorite),
             onPressed: () {

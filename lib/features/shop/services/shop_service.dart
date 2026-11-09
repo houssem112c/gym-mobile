@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import '../models/product.dart';
+import '../../../services/auth_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,7 +14,7 @@ class ShopService {
   static const Duration _requestTimeout = Duration(seconds: 20);
 
   String get baseUrl {
-    if (kIsWeb) return 'http://https://gym-backend-1-qchc.onrender.com/api';
+    if (kIsWeb) return 'https://gym-backend-1-qchc.onrender.com/api';
     return 'https://gym-backend-1-qchc.onrender.com/api';
   }
 
@@ -61,7 +63,8 @@ class ShopService {
       final cachedAtMs = prefs.getInt(_productsCacheTimeKey);
       if (cachedAtMs != null) {
         final cachedAt = DateTime.fromMillisecondsSinceEpoch(cachedAtMs);
-        final isFresh = DateTime.now().difference(cachedAt) <= _productsCacheTtl;
+        final isFresh =
+            DateTime.now().difference(cachedAt) <= _productsCacheTtl;
         if (!isFresh) return null;
       }
     }
@@ -77,7 +80,8 @@ class ShopService {
   Future<void> _writeProductsCache(String rawBody) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_productsCacheKey, rawBody);
-    await prefs.setInt(_productsCacheTimeKey, DateTime.now().millisecondsSinceEpoch);
+    await prefs.setInt(
+        _productsCacheTimeKey, DateTime.now().millisecondsSinceEpoch);
   }
 
   Future<Map<String, dynamic>> createPaymentIntent(
@@ -136,4 +140,20 @@ class ShopService {
 
     throw Exception('Failed to create order (${response.statusCode})');
   }
+
+  Future<List<Map<String, dynamic>>> getMyOrders(AuthService auth) async {
+    try {
+      final response = await auth.authenticatedGet('/orders');
+      return (response.data as List).cast<Map<String, dynamic>>();
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 401) {
+        throw const UnauthorizedException();
+      }
+      throw Exception('Failed to load orders');
+    }
+  }
+}
+
+class UnauthorizedException implements Exception {
+  const UnauthorizedException();
 }

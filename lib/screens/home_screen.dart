@@ -15,6 +15,8 @@ import '../models/course.dart';
 import '../models/story.dart';
 import 'courses_screen.dart';
 import 'workout_plans_screen.dart';
+import 'member_qr_scanner_screen.dart';
+import '../services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onContactTap;
@@ -113,6 +115,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Header
                   _buildHeader(),
                   const SizedBox(height: 30),
+                  Consumer<AuthService>(
+                    builder: (context, auth, _) {
+                      if (!auth.isAuthenticated) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: OutlinedButton.icon(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const MemberQrScannerScreen()),
+                          ),
+                          icon: const Icon(Icons.qr_code_scanner),
+                          label: const Text('Scan gym check-in QR'),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
 
                   // Stories Section
                   if (!_loadingStories && _storyGroups.isNotEmpty)

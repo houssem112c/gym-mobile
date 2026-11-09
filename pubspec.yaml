@@ -71,6 +71,7 @@ dependencies:
 
   # For loading bundled .glb assets into a local file path
   path_provider: ^2.1.5
+  mobile_scanner: ^7.5.0
 
 
 dev_dependencies:
